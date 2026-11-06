@@ -1,10 +1,8 @@
 from typing import Annotated
 from fastapi import FastAPI, Depends
-from db import oauth2_scheme, connection_utils
+from db import oauth2_scheme, conn_utils
 from db.sqlc import queries
 from contextlib import asynccontextmanager
-
-conn_utils = connection_utils.Connector()
 
 
 @asynccontextmanager

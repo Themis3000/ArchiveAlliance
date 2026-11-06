@@ -1,13 +1,31 @@
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
+from . import conn_utils
+from .sqlc import queries, models
 
 
 SECRET_KEY = "eaedf1eca19cd97855d50698724bc88304af49acf1e65ff7d17b982ae34758fe"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 password_hash = PasswordHash.recommended()
+DUMMY_HASH = password_hash.hash("dummypassword")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def authenticate_user(username: str, password: str):
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return password_hash.verify(plain_password, hashed_password)
+
+
+async def authenticate_user(username: str, password: str) -> models.User:
+    async with conn_utils.get_conn() as conn:
+        user = await queries.get_user(conn, username=username)
+    if user is None:
+        verify_password(password, DUMMY_HASH)  # to help prevent a timing attack
+        raise InvalidUsernamePass()
+    if not verify_password(password, user.password):
+        raise InvalidUsernamePass()
+    return user
+
+
+class InvalidUsernamePass(Exception):
     pass
