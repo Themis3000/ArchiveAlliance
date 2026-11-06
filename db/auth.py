@@ -1,5 +1,7 @@
 from datetime import timedelta, datetime, timezone
+from typing import Annotated
 import jwt
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
 from pydantic import BaseModel
@@ -45,3 +47,15 @@ def create_access_token(data: dict) -> Token:
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
     return Token(access_token=encoded_jwt, token_type="bearer")
+
+
+async def get_current_jwt(token: Annotated[str, Depends(oauth2_scheme)]):
+    payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+    username = payload.get("username")
+    if username is None:
+        raise InvalidJWTData("No username")
+    return payload
+
+
+class InvalidJWTData(Exception):
+    pass

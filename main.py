@@ -20,12 +20,12 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/user/{username}")
-async def get_user(username: str, token: Annotated[str, Depends(auth.oauth2_scheme)]):
+@app.get("/user/me")
+async def get_user(username: str, token: Annotated[str, Depends(auth.get_current_jwt)]):
     async with conn_utils.get_conn() as conn:
         user = await queries.get_user(conn, username=username)
     if user is None:
-        raise Exception()
+        raise HTTPException(status_code=400, detail="ruh roh")
     return {"message": f"Their password is {user.password}"}
 
 
