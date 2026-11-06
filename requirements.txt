@@ -1,0 +1,10 @@
+Jinja2
+uvicorn
+fastapi
+sqlc-bin
+asyncpg
+asyncpg-stubs
+PyJWT
+python-multipart
+pwdlib[argon2]
+pydantic
