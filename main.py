@@ -4,6 +4,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from db import conn_utils, auth
 from db.sqlc import queries
 from contextlib import asynccontextmanager
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 
 @asynccontextmanager
@@ -13,9 +15,10 @@ async def lifespan(_: FastAPI):
     await conn_utils.disconnect()
 
 app = FastAPI(lifespan=lifespan)
+templates = Jinja2Templates(directory="templates/")
 
 
-@app.get("/")
+@app.get("/test")
 async def root():
     return {"message": "Hello World"}
 
@@ -40,3 +43,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]) -> a
     jwt_data = {"user_id": user.id_, "username": user.username, "super_admin": user.super_admin}
     token = auth.create_access_token(jwt_data)
     return token
+
+
+# This should stay after all other endpoints
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
