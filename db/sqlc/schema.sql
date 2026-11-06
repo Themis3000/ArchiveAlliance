@@ -17,7 +17,7 @@ CREATE INDEX "directives_active_index" ON
 CREATE TABLE "users"(
     "id" SERIAL NOT NULL,
     "username" VARCHAR(255) NOT NULL,
-    "password" CHAR(64) NOT NULL,
+    "password" BYTEA,
     "super_admin" BOOLEAN NOT NULL DEFAULT FALSE
 );
 ALTER TABLE

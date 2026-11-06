@@ -22,7 +22,7 @@ class Token(BaseModel):
     token_type: str
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
+def verify_password(plain_password: str, hashed_password: bytes) -> bool:
     return password_hash.verify(plain_password, hashed_password)
 
 
@@ -32,7 +32,7 @@ async def authenticate_user(username: str, password: str) -> models.User:
     if user is None:
         verify_password(password, DUMMY_HASH)  # to help prevent a timing attack
         raise InvalidUsernamePass()
-    if not verify_password(password, user.password):
+    if not verify_password(password, user.password.tobytes()):
         raise InvalidUsernamePass()
     return user
 
@@ -49,7 +49,7 @@ def create_access_token(data: dict) -> Token:
     return Token(access_token=encoded_jwt, token_type="bearer")
 
 
-async def get_current_jwt(token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_jwt(token: Annotated[str, Depends(oauth2_scheme)]) -> dict:
     payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
     username = payload.get("username")
     if username is None:
@@ -59,3 +59,9 @@ async def get_current_jwt(token: Annotated[str, Depends(oauth2_scheme)]):
 
 class InvalidJWTData(Exception):
     pass
+
+
+async def add_user(username: str, password: str, is_super_admin=False):
+    hashed_password = password_hash.hash(password).encode()
+    async with conn_utils.get_conn() as conn:
+        await queries.add_user(conn, username=username, password=hashed_password, super_admin=is_super_admin)

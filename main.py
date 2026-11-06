@@ -20,13 +20,15 @@ async def root():
     return {"message": "Hello World"}
 
 
-@app.get("/user/me")
-async def get_user(username: str, token: Annotated[str, Depends(auth.get_current_jwt)]):
-    async with conn_utils.get_conn() as conn:
-        user = await queries.get_user(conn, username=username)
-    if user is None:
-        raise HTTPException(status_code=400, detail="ruh roh")
-    return {"message": f"Their password is {user.password}"}
+@app.get("/user/myjwt")
+async def get_user_jwt(jwt: Annotated[str, Depends(auth.get_current_jwt)]):
+    return jwt
+
+
+@app.post("/user/add")
+async def add_user(username: str, password: str):
+    await auth.add_user(username, password)
+    return {"success": True}
 
 
 @app.post("/token")

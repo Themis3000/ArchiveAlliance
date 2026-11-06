@@ -7,6 +7,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
+    "add_user",
     "get_user",
     "list_users",
 )
@@ -31,6 +32,11 @@ SELECT id, username, password, super_admin FROM users WHERE username = $1
 
 LIST_USERS: typing.Final[str] = """-- name: ListUsers :many
 SELECT id, username, password, super_admin FROM users ORDER BY id
+"""
+
+ADD_USER: typing.Final[str] = """-- name: AddUser :exec
+INSERT INTO users (username, password, super_admin)
+VALUES ($1, $2, $3)
 """
 
 
@@ -80,11 +86,15 @@ async def get_user(conn: ConnectionLike, *, username: str) -> models.User | None
     row = await conn.fetchrow(GET_USER, username)
     if row is None:
         return None
-    return models.User(id_=row[0], username=row[1], password=row[2], super_admin=row[3])
+    return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3])
 
 
 def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
     def _decode_hook(row: asyncpg.Record) -> models.User:
-        return models.User(id_=row[0], username=row[1], password=row[2], super_admin=row[3])
+        return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3])
 
     return QueryResults(conn, LIST_USERS, _decode_hook)
+
+
+async def add_user(conn: ConnectionLike, *, username: str, password: memoryview | None, super_admin: bool) -> None:
+    await conn.execute(ADD_USER, username, password, super_admin)

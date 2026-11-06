@@ -43,5 +43,5 @@ class User(pydantic.BaseModel):
 
     id_: int
     username: str
-    password: str
+    password: memoryview | None
     super_admin: bool
