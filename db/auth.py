@@ -1,5 +1,8 @@
+from datetime import timedelta, datetime, timezone
+import jwt
 from fastapi.security import OAuth2PasswordBearer
 from pwdlib import PasswordHash
+from pydantic import BaseModel
 from . import conn_utils
 from .sqlc import queries, models
 
@@ -10,6 +13,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 password_hash = PasswordHash.recommended()
 DUMMY_HASH = password_hash.hash("dummypassword")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -29,3 +37,11 @@ async def authenticate_user(username: str, password: str) -> models.User:
 
 class InvalidUsernamePass(Exception):
     pass
+
+
+def create_access_token(data: dict) -> Token:
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm="HS256")
+    return Token(access_token=encoded_jwt, token_type="bearer")
