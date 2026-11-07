@@ -131,7 +131,6 @@ async def get_directive_page(request: Request,
 async def check_work_status(work_id: int, authors: Annotated[list[str], Query()], site: str):
     async with conn_utils.get_conn() as conn:
         directives = await queries.get_work_directives(conn, work_id=str(work_id), authors=authors, origin=site)
-    print(directives)
 
     permission = True
     for directive in directives:
