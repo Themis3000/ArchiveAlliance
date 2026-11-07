@@ -29,6 +29,7 @@
             <th>Selector</th>
             <th>Directive type</th>
             <th>Directive data</th>
+            <th>Applies to</th>
             <th>Enabled</th>
         </tr>
         <tr>
@@ -37,6 +38,7 @@
             <td>{{ directive.selector }}</td>
             <td>{{ directive.directive_type }}</td>
             <td>{{ directive.directive_data }}</td>
+            <td>{{ directive.applies_to }}</td>
             <td>
                 <label>
                     <input type="checkbox" disabled {{ "checked" if directive.active }}>
