@@ -1,3 +1,4 @@
+import datetime
 from typing import Annotated
 from fastapi import FastAPI, Depends, HTTPException, Request, Form, Cookie, Query
 from fastapi.responses import RedirectResponse
@@ -23,7 +24,7 @@ app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/")
 
 
-async def get_active_jwt(access_token: Annotated[str, Cookie()]) -> dict:
+async def get_active_jwt(request: Request, access_token: Annotated[str, Cookie()]) -> dict:
     try:
         jwt_data = auth.get_current_jwt(access_token)
     except InvalidTokenError:
@@ -32,7 +33,23 @@ async def get_active_jwt(access_token: Annotated[str, Cookie()]) -> dict:
         valid = await queries.check_user_enabled(conn, id_=jwt_data["user_id"])
     if not valid:
         raise HTTPException(status_code=403, detail="JWT token belongs to an inactive account")
+    request.state.jwt = jwt_data
     return jwt_data
+
+
+@app.middleware("http")
+async def refresh_jwt(request: Request, call_next):
+    response = await call_next(request)
+
+    if "jwt" not in request.state:
+        return response
+
+    jwt_exp = datetime.datetime.fromtimestamp(request.state.jwt["exp"])
+    issued_time = jwt_exp - datetime.timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if issued_time + datetime.timedelta(minutes=10) < datetime.datetime.now():
+        token = auth.create_access_token(request.state.jwt)
+        response.headers["Set-Cookie"] = f"access_token={token.access_token}; Secure"
+    return response
 
 
 @app.post("/user/add")
