@@ -99,7 +99,8 @@ async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_act
     return templates.TemplateResponse(
         request,
         "directives.jinja",
-        context={"request": request, "directives": directives, "page": page, "next_page": next_page}
+        context={"request": request, "directives": directives, "page": page, "next_page": next_page,
+                 "is_super_admin": jwt["super_admin"]}
     )
 
 

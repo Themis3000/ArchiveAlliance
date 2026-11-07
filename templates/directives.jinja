@@ -22,6 +22,9 @@
 </head>
 <body>
     <h1>Directives</h1>
+    {% if is_super_admin %}
+        <a href="/manage_users">Manage users</a>
+    {% endif %}
     <form action="/add_directive" method="post">
         <label>
             Directive type
