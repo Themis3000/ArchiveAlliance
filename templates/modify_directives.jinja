@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ao3saver secret removal form</title>
+    <title>Modify directives</title>
     <style>
         table {
           font-family: arial, sans-serif;
@@ -70,7 +70,7 @@
         </tr>
         {% for directive in directives %}
             <tr>
-                <td>{{ directive.id_ }}</td>
+                <td><a href="/directives/{{ directive.id_ }}">{{ directive.id_ }}</a></td>
                 <td>{{ directive.selector_type }}</td>
                 <td>{{ directive.selector }}</td>
                 <td>{{ directive.directive_type }}</td>

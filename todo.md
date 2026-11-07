@@ -3,3 +3,4 @@
 - Check if user still exists as part of auth, that way removing an account can take effect right away
 - Make directives.selector case-insensitive
 - Fix indexing for selector type / selector pair
+- Display time in requester's time zone

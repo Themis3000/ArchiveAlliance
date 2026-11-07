@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Directive page</title>
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+
+        tr:nth-child(even) {
+          background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Directive details</h1>
+    <table>
+        <tr>
+            <th>Directive ID</th>
+            <th>Selector type</th>
+            <th>Selector</th>
+            <th>Directive type</th>
+            <th>Directive data</th>
+            <th>Enabled</th>
+        </tr>
+        <tr>
+            <td>{{ directive.id_ }}</td>
+            <td>{{ directive.selector_type }}</td>
+            <td>{{ directive.selector }}</td>
+            <td>{{ directive.directive_type }}</td>
+            <td>{{ directive.directive_data }}</td>
+            <td>
+                <label>
+                    <input type="checkbox" disabled {{ "checked" if directive.active }}>
+                </label>
+            </td>
+        </tr>
+    </table>
+
+    <h3>Change active status:</h3>
+    <form action="/set_directive_status" method="post">
+        <input type="hidden" name="directive_id" value="{{ directive.id_ }}">
+        <label>
+            <input type="checkbox">
+            Enabled
+        </label>
+        <br>
+        <label>
+            Note:<br>
+            <textarea name="change_note" id="change_note" cols="50" rows="4"></textarea>
+        </label>
+        <br>
+        <input type="submit" value="Change status">
+    </form>
+
+    <h3>Add note:</h3>
+    <form action="/add_audit_note" method="post">
+        <label>
+            Note:<br>
+            <textarea name="change_note" id="change_note" cols="50" rows="4"></textarea>
+        </label>
+        <br>
+        <input type="submit" value="Add note">
+    </form>
+
+    <h3>Audit log:</h3>
+    <table>
+        <tr>
+            <th>Entry id</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Note</th>
+            <th>Time</th>
+        </tr>
+        {% for entry in audit_log %}
+            <tr>
+                <td>{{ entry.id_ }}</td>
+                <td>{{ entry.user_id }}</td>
+                <td>{{ entry.action }}</td>
+                <td>{{ entry.note }}</td>
+                <td>{{ entry.time }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

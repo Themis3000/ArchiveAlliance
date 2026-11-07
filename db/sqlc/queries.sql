@@ -28,3 +28,9 @@ WHERE id = $1;
 -- name: AddAudit :exec
 INSERT INTO audit_log (user_id, note, action, directive)
 VALUES ($1, $2, $3, $4);
+
+-- name: GetDirectiveAudits :many
+SELECT * FROM audit_log WHERE directive = $1;
+
+-- name: GetDirective :one
+SELECT * from directives WHERE id = $1;

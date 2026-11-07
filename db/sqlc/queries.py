@@ -10,6 +10,8 @@ __all__: collections.abc.Sequence[str] = (
     "add_audit",
     "add_directive_with_audit",
     "add_user",
+    "get_directive",
+    "get_directive_audits",
     "get_user",
     "list_directives",
     "list_users",
@@ -22,8 +24,9 @@ if typing.TYPE_CHECKING:
     import asyncpg
     import asyncpg.cursor
     import collections.abc
+    import datetime
 
-    type QueryResultsArgsType = int | float | str | memoryview | collections.abc.Sequence[QueryResultsArgsType] | None
+    type QueryResultsArgsType = int | float | str | memoryview | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | collections.abc.Sequence[QueryResultsArgsType] | None
 
     type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
@@ -66,6 +69,14 @@ WHERE id = $1
 ADD_AUDIT: typing.Final[str] = """-- name: AddAudit :exec
 INSERT INTO audit_log (user_id, note, action, directive)
 VALUES ($1, $2, $3, $4)
+"""
+
+GET_DIRECTIVE_AUDITS: typing.Final[str] = """-- name: GetDirectiveAudits :many
+SELECT id, user_id, directive, action, note, time FROM audit_log WHERE directive = $1
+"""
+
+GET_DIRECTIVE: typing.Final[str] = """-- name: GetDirective :one
+SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active from directives WHERE id = $1
 """
 
 
@@ -146,3 +157,17 @@ async def set_directive_status(conn: ConnectionLike, *, id_: int, active: bool) 
 
 async def add_audit(conn: ConnectionLike, *, user_id: int, note: str | None, action: str, directive: int) -> None:
     await conn.execute(ADD_AUDIT, user_id, note, action, directive)
+
+
+def get_directive_audits(conn: ConnectionLike, *, directive: int) -> QueryResults[models.AuditLog]:
+    def _decode_hook(row: asyncpg.Record) -> models.AuditLog:
+        return models.AuditLog(id_=row[0], user_id=row[1], directive=row[2], action=row[3], note=row[4], time=row[5])
+
+    return QueryResults(conn, GET_DIRECTIVE_AUDITS, _decode_hook, directive)
+
+
+async def get_directive(conn: ConnectionLike, *, id_: int) -> models.Directive | None:
+    row = await conn.fetchrow(GET_DIRECTIVE, id_)
+    if row is None:
+        return None
+    return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])

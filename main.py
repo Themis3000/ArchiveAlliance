@@ -86,5 +86,21 @@ async def set_directive_status(jwt: Annotated[dict, Depends(auth.get_current_jwt
     return RedirectResponse("/modify_directives", status_code=302)
 
 
+@app.get("/directives/{directive_id}")
+async def get_directive_page(request: Request,
+                             jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+                             directive_id: int):
+    async with conn_utils.get_conn() as conn:
+        directive = await queries.get_directive(conn, id_=directive_id)
+        audit_log = await queries.get_directive_audits(conn, directive=directive_id)
+    if audit_log is None:
+        raise HTTPException(status_code=404, detail="Could not find that directive")
+    return templates.TemplateResponse(
+        request,
+        "directive_page.jinja",
+        context={"directive": directive, "audit_log": audit_log}
+    )
+
+
 # This should stay after all other endpoints
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
