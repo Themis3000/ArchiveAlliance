@@ -63,13 +63,13 @@
         </tr>
         {% for directive in directives %}
             <tr>
-                <td>{{ directive.directive_id }}</td>
+                <td>{{ directive.id_ }}</td>
                 <td>{{ directive.selector }}</td>
                 <td>{{ directive.directive_type }}</td>
                 <td>{{ directive.directive_data }}</td>
                 <td>
                     <form action="/remove_directive" method="post">
-                        <button name="directive_id" value="{{ directive.directive_id }}">Delete</button>
+                        <button name="directive_id" value="{{ directive.id_ }}">Delete</button>
                     </form>
                 </td>
             </tr>

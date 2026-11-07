@@ -4,7 +4,7 @@ CREATE TABLE "directives"(
     "directive_type" VARCHAR(255) NOT NULL,
     "directive_data" TEXT NULL,
     "applies_to" TEXT NOT NULL DEFAULT '*',
-    "active" BOOLEAN NOT NULL
+    "active" BOOLEAN NOT NULL DEFAULT TRUE
 );
 ALTER TABLE
     "directives" ADD PRIMARY KEY("id");
