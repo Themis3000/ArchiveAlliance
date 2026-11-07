@@ -3,3 +3,4 @@
 - Make directives.selector case-insensitive
 - Fix indexing for selector type / selector pair
 - Display time in requester's time zone
+- Have username instead of user id displayed in audit log
