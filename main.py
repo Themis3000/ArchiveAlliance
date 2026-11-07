@@ -24,7 +24,9 @@ app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/")
 
 
-async def get_active_jwt(request: Request, access_token: Annotated[str, Cookie()]) -> dict:
+async def get_active_jwt(request: Request, access_token: Annotated[str | None, Cookie()] = None) -> dict:
+    if access_token is None:
+        raise HTTPException(status_code=401, detail="No JWT token provided")
     try:
         jwt_data = auth.get_current_jwt(access_token)
     except InvalidTokenError:
@@ -49,6 +51,14 @@ async def refresh_jwt(request: Request, call_next):
     if issued_time + datetime.timedelta(minutes=10) < datetime.datetime.now():
         token = auth.create_access_token(request.state.jwt)
         response.headers["Set-Cookie"] = f"access_token={token.access_token}; Secure"
+    return response
+
+
+@app.middleware("http")
+async def forbidden_redirect(request: Request, call_next):
+    response = await call_next(request)
+    if response.status_code == 401:
+        return RedirectResponse("/login.html", status_code=302)
     return response
 
 
