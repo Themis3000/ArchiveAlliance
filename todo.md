@@ -2,6 +2,5 @@
 - Make directives.selector case-insensitive
 - Fix indexing for selector type / selector pair
 - Display time in requester's time zone
-- Have username instead of user id displayed in audit log
 - Add explanation of the service on home page
 - Add explanation in readme

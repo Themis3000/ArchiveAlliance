@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
+    "GetDirectiveAuditsRow",
     "QueryResults",
     "add_audit",
     "add_directive_with_audit",
@@ -21,19 +22,31 @@ __all__: collections.abc.Sequence[str] = (
     "set_directive_status",
 )
 
+import datetime
+import pydantic
 import typing
 
 if typing.TYPE_CHECKING:
     import asyncpg
     import asyncpg.cursor
     import collections.abc
-    import datetime
 
     type QueryResultsArgsType = int | float | str | memoryview | datetime.date | datetime.time | datetime.datetime | datetime.timedelta | collections.abc.Sequence[QueryResultsArgsType] | None
 
     type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from . import models
+
+
+class GetDirectiveAuditsRow(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    action: str
+    note: str | None
+    user_id: int
+    time: datetime.datetime
+    username: str | None
 
 
 GET_USER: typing.Final[str] = """-- name: GetUser :one
@@ -79,7 +92,9 @@ VALUES ($1, $2, $3, $4)
 """
 
 GET_DIRECTIVE_AUDITS: typing.Final[str] = """-- name: GetDirectiveAudits :many
-SELECT id, user_id, directive, action, note, time FROM audit_log WHERE directive = $1 ORDER BY id DESC
+SELECT a.id, a.action, a.note, a.user_id, a.time, u.username FROM audit_log a
+LEFT JOIN users u on u.id = a.user_id
+WHERE a.directive = $1
 """
 
 GET_DIRECTIVE: typing.Final[str] = """-- name: GetDirective :one
@@ -186,9 +201,9 @@ async def add_audit(conn: ConnectionLike, *, user_id: int, note: str | None, act
     await conn.execute(ADD_AUDIT, user_id, note, action, directive)
 
 
-def get_directive_audits(conn: ConnectionLike, *, directive: int) -> QueryResults[models.AuditLog]:
-    def _decode_hook(row: asyncpg.Record) -> models.AuditLog:
-        return models.AuditLog(id_=row[0], user_id=row[1], directive=row[2], action=row[3], note=row[4], time=row[5])
+def get_directive_audits(conn: ConnectionLike, *, directive: int) -> QueryResults[GetDirectiveAuditsRow]:
+    def _decode_hook(row: asyncpg.Record) -> GetDirectiveAuditsRow:
+        return GetDirectiveAuditsRow(id_=row[0], action=row[1], note=row[2], user_id=row[3], time=row[4], username=row[5])
 
     return QueryResults(conn, GET_DIRECTIVE_AUDITS, _decode_hook, directive)
 
