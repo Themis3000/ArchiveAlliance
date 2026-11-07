@@ -1,7 +1,8 @@
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, Request, Form
+from fastapi import FastAPI, Depends, HTTPException, Request, Form, Cookie
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from jwt import InvalidTokenError
 from db import auth, connection_utils
 from db.sqlc import queries
 from contextlib import asynccontextmanager
@@ -22,11 +23,15 @@ app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/")
 
 
-async def get_active_jwt(jwt_data: Annotated[dict, Depends(auth.get_current_jwt)]) -> dict:
+async def get_active_jwt(access_token: Annotated[str, Cookie()]) -> dict:
+    try:
+        jwt_data = auth.get_current_jwt(access_token)
+    except InvalidTokenError:
+        raise HTTPException(status_code=401, detail="JWT token is invalid")
     async with conn_utils.get_conn() as conn:
         valid = await queries.check_user_enabled(conn, id_=jwt_data["user_id"])
     if not valid:
-        raise HTTPException(status_code=401, detail="JWT token belongs to an inactive account")
+        raise HTTPException(status_code=403, detail="JWT token belongs to an inactive account")
     return jwt_data
 
 

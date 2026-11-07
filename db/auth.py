@@ -45,7 +45,7 @@ def create_access_token(data: dict) -> Token:
     return Token(access_token=encoded_jwt, token_type="Bearer")
 
 
-async def get_current_jwt(access_token: Annotated[str, Cookie()]) -> dict:
+def get_current_jwt(access_token: str) -> dict:
     payload = jwt.decode(access_token, SECRET_KEY, algorithms=["HS256"])
     username = payload.get("username")
     if username is None:
