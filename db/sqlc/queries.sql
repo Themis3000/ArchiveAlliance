@@ -22,6 +22,11 @@ ORDER BY id DESC
 OFFSET $1
 LIMIT $2;
 
+-- name: SearchDirectives :many
+SELECT * FROM directives
+WHERE selector = $1
+ORDER BY id DESC;
+
 -- name: AddDirectiveWithAudit :exec
 WITH new_directive AS (
     INSERT INTO directives (selector_type, selector, directive_type, directive_data, applies_to)

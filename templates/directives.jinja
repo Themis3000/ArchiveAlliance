@@ -68,6 +68,16 @@
         <input type="submit" value="Submit">
     </form>
     <h3>Current directives:</h3>
+    <form action="/directives" method="get">
+        <label>
+            Search directives
+            <input type="text" name="search_term">
+        </label>
+        <input type="submit" value="Submit">
+    </form>
+    {% if is_search %}
+        <a href="/directives">Clear search</a>
+    {% endif %}
     <table>
         <tr>
             <th>Directive ID</th>
@@ -94,11 +104,13 @@
             </tr>
         {% endfor %}
     </table>
-    {% if page != 1 %}
-        <a href="?page={{ page - 1 }}">Last page</a>
-    {% endif %}
-    {% if next_page %}
-        <a href="?page={{ page + 1 }}">Next page</a>
+    {% if not is_search %}
+        {% if page != 1 %}
+            <a href="?page={{ page - 1 }}">Last page</a>
+        {% endif %}
+        {% if next_page %}
+            <a href="?page={{ page + 1 }}">Next page</a>
+        {% endif %}
     {% endif %}
 
 </body>

@@ -2,4 +2,3 @@
 - Display time in requester's time zone
 - Add explanation of the service on home page
 - Add explanation in readme
-- Add search to directives page

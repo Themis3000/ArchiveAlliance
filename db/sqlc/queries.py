@@ -19,6 +19,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_work_directives",
     "list_directives",
     "list_users",
+    "search_directives",
     "set_directive_status",
     "update_user",
 )
@@ -78,6 +79,12 @@ SELECT id, selector_type, selector, directive_type, directive_data, applies_to, 
 ORDER BY id DESC
 OFFSET $1
 LIMIT $2
+"""
+
+SEARCH_DIRECTIVES: typing.Final[str] = """-- name: SearchDirectives :many
+SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
+WHERE selector = $1
+ORDER BY id DESC
 """
 
 ADD_DIRECTIVE_WITH_AUDIT: typing.Final[str] = """-- name: AddDirectiveWithAudit :exec
@@ -201,6 +208,13 @@ def list_directives(conn: ConnectionLike, *, offset: int, limit: int) -> QueryRe
         return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
 
     return QueryResults(conn, LIST_DIRECTIVES, _decode_hook, offset, limit)
+
+
+def search_directives(conn: ConnectionLike, *, selector: str) -> QueryResults[models.Directive]:
+    def _decode_hook(row: asyncpg.Record) -> models.Directive:
+        return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+
+    return QueryResults(conn, SEARCH_DIRECTIVES, _decode_hook, selector)
 
 
 async def add_directive_with_audit(conn: ConnectionLike, *, selector_type: str, selector: str, directive_type: str, directive_data: str | None, applies_to: str, user_id: int, note: str | None) -> None:

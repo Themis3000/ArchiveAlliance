@@ -112,12 +112,21 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @app.get("/directives")
-async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)], page: int = 1):
+async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)], page: int = 1,
+                          search_term: str | None = None):
+    if search_term is not None:
+        async with conn_utils.get_conn() as conn:
+            directives = await queries.search_directives(conn, selector=search_term)
+        return templates.TemplateResponse(
+            request,
+            "directives.jinja",
+            context={"directives": directives, "is_super_admin": jwt["super_admin"], "is_search": True}
+        )
+
     items_per_page = 50
     offset = (page - 1) * items_per_page
     async with conn_utils.get_conn() as conn:
         directives = list(await queries.list_directives(conn, limit=items_per_page + 1, offset=offset))
-
     next_page = False
     if len(directives) == items_per_page + 1:
         next_page = True
@@ -126,8 +135,7 @@ async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_act
     return templates.TemplateResponse(
         request,
         "directives.jinja",
-        context={"request": request, "directives": directives, "page": page, "next_page": next_page,
-                 "is_super_admin": jwt["super_admin"]}
+        context={"directives": directives, "page": page, "next_page": next_page, "is_super_admin": jwt["super_admin"]}
     )
 
 
