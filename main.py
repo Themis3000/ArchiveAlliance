@@ -51,18 +51,18 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
         raise HTTPException(status_code=401, detail="Invalid username/password")
     jwt_data = {"user_id": user.id_, "username": user.username, "super_admin": user.super_admin}
     token = auth.create_access_token(jwt_data)
-    return RedirectResponse("/modify_directives", status_code=302,
+    return RedirectResponse("/directives", status_code=302,
                             headers={"Set-Cookie": f"access_token={token.access_token}; Secure"})
 
 
-@app.get("/modify_directives")
-async def modify_directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)]):
+@app.get("/directives")
+async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)]):
     async with conn_utils.get_conn() as conn:
         directives = await queries.list_directives(conn)
 
     return templates.TemplateResponse(
         request,
-        "modify_directives.jinja",
+        "directives.jinja",
         context={"request": request, "directives": directives}
     )
 
@@ -84,7 +84,7 @@ async def add_directive(jwt: Annotated[dict, Depends(get_active_jwt)],
                                                applies_to="*",
                                                note=change_note,
                                                user_id=int(jwt["user_id"]))
-    return RedirectResponse("/modify_directives", status_code=302)
+    return RedirectResponse("/directives", status_code=302)
 
 
 @app.post("/set_directive_status")
