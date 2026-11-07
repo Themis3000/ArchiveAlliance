@@ -1,14 +1,13 @@
 from datetime import timedelta, datetime, timezone
-from typing import Annotated
 import jwt
-from fastapi import Cookie, Depends
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 from .sqlc import queries, models
+import os
 
 
-SECRET_KEY = "eaedf1eca19cd97855d50698724bc88304af49acf1e65ff7d17b982ae34758fe"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+SECRET_KEY = os.environ["SECRET_KEY"]
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ["TOKEN_EXPIRE_MINS"])
 
 password_hash = PasswordHash.recommended()
 DUMMY_HASH = password_hash.hash("dummypassword")

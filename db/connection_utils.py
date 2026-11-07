@@ -1,4 +1,5 @@
 import asyncpg
+import os
 
 
 class Connector:
@@ -6,7 +7,11 @@ class Connector:
         self.pool: None | asyncpg.Pool = None
 
     async def connect(self):
-        self.pool = await asyncpg.create_pool(database="postgres", user="postgres", port=5431, host="127.0.0.1")
+        self.pool = await asyncpg.create_pool(database=os.environ["DB"],
+                                              user=os.environ["USER"],
+                                              password=os.environ["PASSWORD"],
+                                              port=os.environ["PORT"],
+                                              host=os.environ["HOST"])
 
     def get_conn(self):
         if self.pool is None:
