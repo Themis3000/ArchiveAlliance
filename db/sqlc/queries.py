@@ -67,7 +67,10 @@ VALUES ($1, $2, $3)
 """
 
 LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
-SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives ORDER BY id DESC
+SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
+ORDER BY id DESC
+OFFSET $1
+LIMIT $2
 """
 
 ADD_DIRECTIVE_WITH_AUDIT: typing.Final[str] = """-- name: AddDirectiveWithAudit :exec
@@ -182,11 +185,11 @@ async def add_user(conn: ConnectionLike, *, username: str, password: memoryview 
     await conn.execute(ADD_USER, username, password, super_admin)
 
 
-def list_directives(conn: ConnectionLike) -> QueryResults[models.Directive]:
+def list_directives(conn: ConnectionLike, *, offset: int, limit: int) -> QueryResults[models.Directive]:
     def _decode_hook(row: asyncpg.Record) -> models.Directive:
         return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
 
-    return QueryResults(conn, LIST_DIRECTIVES, _decode_hook)
+    return QueryResults(conn, LIST_DIRECTIVES, _decode_hook, offset, limit)
 
 
 async def add_directive_with_audit(conn: ConnectionLike, *, selector_type: str, selector: str, directive_type: str, directive_data: str | None, applies_to: str, user_id: int, note: str | None) -> None:

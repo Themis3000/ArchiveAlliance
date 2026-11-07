@@ -85,14 +85,21 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @app.get("/directives")
-async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)]):
+async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)], page: int = 1):
+    items_per_page = 10
+    offset = (page - 1) * items_per_page
     async with conn_utils.get_conn() as conn:
-        directives = await queries.list_directives(conn)
+        directives = list(await queries.list_directives(conn, limit=items_per_page + 1, offset=offset))
+
+    next_page = False
+    if len(directives) == items_per_page + 1:
+        next_page = True
+        directives.pop()
 
     return templates.TemplateResponse(
         request,
         "directives.jinja",
-        context={"request": request, "directives": directives}
+        context={"request": request, "directives": directives, "page": page, "next_page": next_page}
     )
 
 

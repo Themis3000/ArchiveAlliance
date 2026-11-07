@@ -12,7 +12,10 @@ INSERT INTO users (username, password, super_admin)
 VALUES ($1, $2, $3);
 
 -- name: ListDirectives :many
-SELECT * FROM directives ORDER BY id DESC;
+SELECT * FROM directives
+ORDER BY id DESC
+OFFSET $1
+LIMIT $2;
 
 -- name: AddDirectiveWithAudit :exec
 WITH new_directive AS (
