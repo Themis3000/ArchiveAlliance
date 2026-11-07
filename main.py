@@ -127,7 +127,7 @@ async def get_directive_page(request: Request,
     )
 
 
-@app.get("/api/check_status")
+@app.get("/api/check_work_status")
 async def check_work_status(work_id: int, authors: Annotated[list[str], Query()], site: str):
     print(work_id, authors, site)
 
