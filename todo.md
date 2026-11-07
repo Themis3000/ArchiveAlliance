@@ -1,4 +1,3 @@
-- Handle an invalid/expired jwt gracefully, redirect to login page
 - Make directives.selector case-insensitive
 - Fix indexing for selector type / selector pair
 - Display time in requester's time zone
