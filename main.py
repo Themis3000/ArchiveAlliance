@@ -21,16 +21,6 @@ app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/")
 
 
-@app.get("/test")
-async def root():
-    return {"message": "Hello World"}
-
-
-@app.get("/user/myjwt")
-async def get_user_jwt(jwt: Annotated[str, Depends(auth.get_current_jwt)]):
-    return jwt
-
-
 @app.post("/user/add")
 async def add_user(username: str, password: str):
     async with conn_utils.get_conn() as conn:
