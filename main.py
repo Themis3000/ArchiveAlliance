@@ -77,13 +77,14 @@ async def add_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
 @app.post("/set_directive_status")
 async def set_directive_status(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
                                directive_id: Annotated[int, Form()],
-                               enabled: Annotated[bool, Form()],
-                               note: Annotated[str, Form()]):
+                               note: Annotated[str, Form()],
+                               enabled: Annotated[bool, Form()] = False):
     action = "enabled" if enabled else "disabled"
-    async with conn_utils.get_conn().tranaction() as conn:
-        await queries.set_directive_status(conn, id_=directive_id, active=enabled)
-        await queries.add_audit(conn, user_id=int(jwt["user_id"]), note=note, directive=directive_id, action=action)
-    return RedirectResponse("/modify_directives", status_code=302)
+    async with conn_utils.get_conn() as conn:
+        async with conn.transaction():
+            await queries.set_directive_status(conn, id_=directive_id, active=enabled)
+            await queries.add_audit(conn, user_id=int(jwt["user_id"]), note=note, directive=directive_id, action=action)
+    return RedirectResponse(f"/directives/{directive_id}", status_code=302)
 
 
 @app.get("/directives/{directive_id}")

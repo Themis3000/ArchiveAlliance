@@ -72,7 +72,7 @@ VALUES ($1, $2, $3, $4)
 """
 
 GET_DIRECTIVE_AUDITS: typing.Final[str] = """-- name: GetDirectiveAudits :many
-SELECT id, user_id, directive, action, note, time FROM audit_log WHERE directive = $1
+SELECT id, user_id, directive, action, note, time FROM audit_log WHERE directive = $1 ORDER BY id DESC
 """
 
 GET_DIRECTIVE: typing.Final[str] = """-- name: GetDirective :one

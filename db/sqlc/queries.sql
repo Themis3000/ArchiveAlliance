@@ -30,7 +30,7 @@ INSERT INTO audit_log (user_id, note, action, directive)
 VALUES ($1, $2, $3, $4);
 
 -- name: GetDirectiveAudits :many
-SELECT * FROM audit_log WHERE directive = $1;
+SELECT * FROM audit_log WHERE directive = $1 ORDER BY id DESC;
 
 -- name: GetDirective :one
 SELECT * from directives WHERE id = $1;

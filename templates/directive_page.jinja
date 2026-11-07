@@ -49,13 +49,13 @@
     <form action="/set_directive_status" method="post">
         <input type="hidden" name="directive_id" value="{{ directive.id_ }}">
         <label>
-            <input type="checkbox">
+            <input type="checkbox" name="enabled">
             Enabled
         </label>
         <br>
         <label>
             Note:<br>
-            <textarea name="change_note" id="change_note" cols="50" rows="4"></textarea>
+            <textarea name="note" cols="50" rows="4"></textarea>
         </label>
         <br>
         <input type="submit" value="Change status">
