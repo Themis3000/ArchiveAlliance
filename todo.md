@@ -4,6 +4,5 @@
 - Fix indexing for selector type / selector pair
 - Display time in requester's time zone
 - Have username instead of user id displayed in audit log
-- Create endpoint for consumers to use in order to see if they are allowed to serve a work (/api/check_status)
 - Add explanation of the service on home page
 - Add explanation in readme
