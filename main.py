@@ -63,12 +63,39 @@ async def forbidden_redirect(request: Request, call_next):
 
 
 @app.post("/user/add")
-async def add_user(username: str, password: str, jwt: Annotated[dict, Depends(get_active_jwt)]):
+async def add_user(username: Annotated[str, Form()],
+                   password: Annotated[str, Form()],
+                   jwt: Annotated[dict, Depends(get_active_jwt)]):
     if not jwt.get("super_admin"):
         raise HTTPException(status_code=403, detail="You must be a super admin to add a new account")
     async with conn_utils.get_conn() as conn:
         await auth.add_user(conn, username, password)
-    return {"success": True}
+    return RedirectResponse("/manage_users", status_code=302)
+
+
+@app.post("/user/configure")
+async def configure_user(user_id: Annotated[int, Form()],
+                         is_super_admin: Annotated[bool, Form()],
+                         is_enabled: Annotated[bool, Form()],
+                         jwt: Annotated[dict, Depends(get_active_jwt)]):
+    if not jwt.get("super_admin"):
+        raise HTTPException(status_code=403, detail="You must be a super admin to manage an account")
+    async with conn_utils.get_conn() as conn:
+        await queries.update_user(conn, id_=user_id, enabled=is_enabled, super_admin=is_super_admin)
+    return RedirectResponse("/manage_users", status_code=302)
+
+
+@app.get("/manage_users")
+async def manage_users(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)]):
+    if not jwt.get("super_admin"):
+        raise HTTPException(status_code=403, detail="You must be a super admin to access this page")
+    async with conn_utils.get_conn() as conn:
+        users = await queries.list_users(conn)
+    return templates.TemplateResponse(
+        request,
+        "manage_users.jinja",
+        context={"users": users}
+    )
 
 
 @app.post("/login")

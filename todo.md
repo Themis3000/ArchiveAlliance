@@ -3,4 +3,3 @@
 - Add explanation of the service on home page
 - Add explanation in readme
 - Add search to directives page
-- Add way to add/disable users

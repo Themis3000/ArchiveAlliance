@@ -20,6 +20,7 @@ __all__: collections.abc.Sequence[str] = (
     "list_directives",
     "list_users",
     "set_directive_status",
+    "update_user",
 )
 
 import datetime
@@ -64,6 +65,12 @@ SELECT id, username, password, super_admin, enabled FROM users ORDER BY id
 ADD_USER: typing.Final[str] = """-- name: AddUser :exec
 INSERT INTO users (username, password, super_admin)
 VALUES ($1, $2, $3)
+"""
+
+UPDATE_USER: typing.Final[str] = """-- name: UpdateUser :exec
+UPDATE users
+SET enabled = $2, super_admin = $3
+WHERE id = $1
 """
 
 LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
@@ -183,6 +190,10 @@ def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
 
 async def add_user(conn: ConnectionLike, *, username: str, password: memoryview | None, super_admin: bool) -> None:
     await conn.execute(ADD_USER, username, password, super_admin)
+
+
+async def update_user(conn: ConnectionLike, *, id_: int, enabled: bool, super_admin: bool) -> None:
+    await conn.execute(UPDATE_USER, id_, enabled, super_admin)
 
 
 def list_directives(conn: ConnectionLike, *, offset: int, limit: int) -> QueryResults[models.Directive]:

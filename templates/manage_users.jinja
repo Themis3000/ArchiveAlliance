@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage users</title>
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+
+        tr:nth-child(even) {
+          background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manage users</h1>
+    <form action="/user/add" method="post">
+        <label>
+            username
+            <input type="text" name="username">
+        </label>
+        <label>
+            password
+            <input type="text" name="password">
+        </label>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+    <h3>Users:</h3>
+    <table>
+        <tr>
+            <th>User ID</th>
+            <th>Username</th>
+            <th>Is super admin</th>
+            <th>Enabled</th>
+        </tr>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.id_ }}</td>
+                <td>{{ user.username }}</td>
+                <td>
+                    <label>
+                        <input type="checkbox" disabled {{ "checked" if user.super_admin }}>
+                    </label>
+                    <form action="/user/configure" method="post">
+                        <input type="hidden" name="user_id" value="{{ user.id_ }}">
+                        <input type="hidden" name="is_enabled" value="{{ user.enabled }}">
+                        <input type="hidden" name="is_super_admin" value="{{ not user.super_admin }}">
+                        <input type="submit" value="Toggle">
+                    </form>
+                </td>
+                <td>
+                    <label>
+                        <input type="checkbox" disabled {{ "checked" if user.enabled }}>
+                    </label>
+                    <form action="/user/configure" method="post">
+                        <input type="hidden" name="user_id" value="{{ user.id_ }}">
+                        <input type="hidden" name="is_enabled" value="{{ not user.enabled }}">
+                        <input type="hidden" name="is_super_admin" value="{{ user.super_admin }}">
+                        <input type="submit" value="Toggle">
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -11,6 +11,11 @@ SELECT * FROM users ORDER BY id;
 INSERT INTO users (username, password, super_admin)
 VALUES ($1, $2, $3);
 
+-- name: UpdateUser :exec
+UPDATE users
+SET enabled = $2, super_admin = $3
+WHERE id = $1;
+
 -- name: ListDirectives :many
 SELECT * FROM directives
 ORDER BY id DESC
