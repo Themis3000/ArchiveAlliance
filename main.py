@@ -17,6 +17,7 @@ async def lifespan(_: FastAPI):
     yield
     await conn_utils.disconnect()
 
+
 app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/")
 
@@ -62,15 +63,26 @@ async def add_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
                         directive_data: Annotated[str | None, Form()] = None,
                         ):
     async with conn_utils.get_conn() as conn:
-        print(int(jwt["user_id"]))
-        await queries.add_directive(conn,
-                                    selector_type=selector_type,
-                                    selector=selector,
-                                    directive_type=directive_type,
-                                    directive_data=directive_data,
-                                    applies_to="*",
-                                    note=change_note,
-                                    user_id=int(jwt["user_id"]))
+        await queries.add_directive_with_audit(conn,
+                                               selector_type=selector_type,
+                                               selector=selector,
+                                               directive_type=directive_type,
+                                               directive_data=directive_data,
+                                               applies_to="*",
+                                               note=change_note,
+                                               user_id=int(jwt["user_id"]))
+    return RedirectResponse("/modify_directives", status_code=302)
+
+
+@app.post("/set_directive_status")
+async def set_directive_status(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+                               directive_id: Annotated[int, Form()],
+                               enabled: Annotated[bool, Form()],
+                               note: Annotated[str, Form()]):
+    action = "enabled" if enabled else "disabled"
+    async with conn_utils.get_conn().tranaction() as conn:
+        await queries.set_directive_status(conn, id_=directive_id, active=enabled)
+        await queries.add_audit(conn, user_id=int(jwt["user_id"]), note=note, directive=directive_id, action=action)
     return RedirectResponse("/modify_directives", status_code=302)
 
 

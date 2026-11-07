@@ -7,11 +7,13 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
-    "add_directive",
+    "add_audit",
+    "add_directive_with_audit",
     "add_user",
     "get_user",
     "list_directives",
     "list_users",
+    "set_directive_status",
 )
 
 import typing
@@ -45,7 +47,7 @@ LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
 SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives ORDER BY id DESC
 """
 
-ADD_DIRECTIVE: typing.Final[str] = """-- name: AddDirective :exec
+ADD_DIRECTIVE_WITH_AUDIT: typing.Final[str] = """-- name: AddDirectiveWithAudit :exec
 WITH new_directive AS (
     INSERT INTO directives (selector_type, selector, directive_type, directive_data, applies_to)
     VALUES ($1, $2, $3, $4, $5)
@@ -53,6 +55,17 @@ WITH new_directive AS (
 )
 INSERT INTO audit_log (user_id, note, action, directive)
 VALUES ($6, $7, 'create', (select id from new_directive))
+"""
+
+SET_DIRECTIVE_STATUS: typing.Final[str] = """-- name: SetDirectiveStatus :exec
+UPDATE directives
+SET active = $2
+WHERE id = $1
+"""
+
+ADD_AUDIT: typing.Final[str] = """-- name: AddAudit :exec
+INSERT INTO audit_log (user_id, note, action, directive)
+VALUES ($1, $2, $3, $4)
 """
 
 
@@ -123,5 +136,13 @@ def list_directives(conn: ConnectionLike) -> QueryResults[models.Directive]:
     return QueryResults(conn, LIST_DIRECTIVES, _decode_hook)
 
 
-async def add_directive(conn: ConnectionLike, *, selector_type: str, selector: str, directive_type: str, directive_data: str | None, applies_to: str, user_id: int, note: str | None) -> None:
-    await conn.execute(ADD_DIRECTIVE, selector_type, selector, directive_type, directive_data, applies_to, user_id, note)
+async def add_directive_with_audit(conn: ConnectionLike, *, selector_type: str, selector: str, directive_type: str, directive_data: str | None, applies_to: str, user_id: int, note: str | None) -> None:
+    await conn.execute(ADD_DIRECTIVE_WITH_AUDIT, selector_type, selector, directive_type, directive_data, applies_to, user_id, note)
+
+
+async def set_directive_status(conn: ConnectionLike, *, id_: int, active: bool) -> None:
+    await conn.execute(SET_DIRECTIVE_STATUS, id_, active)
+
+
+async def add_audit(conn: ConnectionLike, *, user_id: int, note: str | None, action: str, directive: int) -> None:
+    await conn.execute(ADD_AUDIT, user_id, note, action, directive)
