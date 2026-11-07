@@ -1,5 +1,5 @@
-from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, Request, Form, Cookie
+from typing import Annotated, List
+from fastapi import FastAPI, Depends, HTTPException, Request, Form, Cookie, Query
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt import InvalidTokenError
@@ -125,6 +125,11 @@ async def get_directive_page(request: Request,
         "directive_page.jinja",
         context={"directive": directive, "audit_log": audit_log}
     )
+
+
+@app.get("/api/check_status")
+async def check_work_status(work_id: int, authors: Annotated[list[str], Query()]):
+    print(work_id, authors)
 
 
 # This should stay after all other endpoints
