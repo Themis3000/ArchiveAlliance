@@ -13,6 +13,7 @@ __all__: collections.abc.Sequence[str] = (
     "check_user_enabled",
     "get_directive",
     "get_directive_audits",
+    "get_table_count",
     "get_user",
     "list_directives",
     "list_users",
@@ -82,6 +83,12 @@ SELECT id, user_id, directive, action, note, time FROM audit_log WHERE directive
 
 GET_DIRECTIVE: typing.Final[str] = """-- name: GetDirective :one
 SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active from directives WHERE id = $1
+"""
+
+GET_TABLE_COUNT: typing.Final[str] = """-- name: GetTableCount :one
+select count(*)
+from information_schema.tables
+where table_schema = 'public'
 """
 
 
@@ -183,3 +190,10 @@ async def get_directive(conn: ConnectionLike, *, id_: int) -> models.Directive |
     if row is None:
         return None
     return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+
+
+async def get_table_count(conn: ConnectionLike) -> int | None:
+    row = await conn.fetchrow(GET_TABLE_COUNT)
+    if row is None:
+        return None
+    return row[0]

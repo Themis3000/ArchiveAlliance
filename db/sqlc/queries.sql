@@ -37,3 +37,9 @@ SELECT * FROM audit_log WHERE directive = $1 ORDER BY id DESC;
 
 -- name: GetDirective :one
 SELECT * from directives WHERE id = $1;
+
+-- name: GetTableCount :one
+select count(*)
+from information_schema.tables
+where table_schema = 'public';
+
