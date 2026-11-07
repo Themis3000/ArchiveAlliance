@@ -128,8 +128,8 @@ async def get_directive_page(request: Request,
 
 
 @app.get("/api/check_status")
-async def check_work_status(work_id: int, authors: Annotated[list[str], Query()]):
-    print(work_id, authors)
+async def check_work_status(work_id: int, authors: Annotated[list[str], Query()], site: str):
+    print(work_id, authors, site)
 
 
 # This should stay after all other endpoints
