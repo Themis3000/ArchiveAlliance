@@ -26,7 +26,7 @@ class AuditLog(pydantic.BaseModel):
     directive: int
     action: str
     note: str | None
-    time: datetime.date
+    time: datetime.datetime
 
 
 class Directive(pydantic.BaseModel):

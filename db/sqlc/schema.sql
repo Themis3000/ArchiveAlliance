@@ -34,7 +34,7 @@ CREATE TABLE "audit_log"(
     "directive" INTEGER NOT NULL,
     "action" VARCHAR(255) NOT NULL,
     "note" TEXT NULL,
-    "time" DATE DEFAULT now() NOT NULL
+    "time" TIMESTAMP DEFAULT now() NOT NULL
 );
 ALTER TABLE
     "audit_log" ADD PRIMARY KEY("id");
