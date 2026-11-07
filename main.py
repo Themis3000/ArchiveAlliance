@@ -2,11 +2,13 @@ from typing import Annotated
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from db import conn_utils, auth
+from db import auth, connection_utils
 from db.sqlc import queries
 from contextlib import asynccontextmanager
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+
+conn_utils = connection_utils.Connector()
 
 
 @asynccontextmanager
@@ -31,14 +33,16 @@ async def get_user_jwt(jwt: Annotated[str, Depends(auth.get_current_jwt)]):
 
 @app.post("/user/add")
 async def add_user(username: str, password: str):
-    await auth.add_user(username, password)
+    async with conn_utils.get_conn() as conn:
+        await auth.add_user(conn, username, password)
     return {"success": True}
 
 
 @app.post("/login")
 async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     try:
-        user = await auth.authenticate_user(form_data.username, form_data.password)
+        async with conn_utils.get_conn() as conn:
+            user = await auth.authenticate_user(conn, form_data.username, form_data.password)
     except auth.InvalidUsernamePass:
         raise HTTPException(status_code=401, detail="Invalid username/password")
     jwt_data = {"user_id": user.id_, "username": user.username, "super_admin": user.super_admin}

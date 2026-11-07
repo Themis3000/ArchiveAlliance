@@ -4,7 +4,6 @@ import jwt
 from fastapi import Cookie
 from pwdlib import PasswordHash
 from pydantic import BaseModel
-from . import conn_utils
 from .sqlc import queries, models
 
 
@@ -24,9 +23,8 @@ def verify_password(plain_password: str, hashed_password: bytes) -> bool:
     return password_hash.verify(plain_password, hashed_password)
 
 
-async def authenticate_user(username: str, password: str) -> models.User:
-    async with conn_utils.get_conn() as conn:
-        user = await queries.get_user(conn, username=username)
+async def authenticate_user(conn, username: str, password: str) -> models.User:
+    user = await queries.get_user(conn, username=username)
     if user is None:
         verify_password(password, DUMMY_HASH)  # to help prevent a timing attack
         raise InvalidUsernamePass()
@@ -59,7 +57,6 @@ class InvalidJWTData(Exception):
     pass
 
 
-async def add_user(username: str, password: str, is_super_admin=False):
+async def add_user(conn, username: str, password: str, is_super_admin=False):
     hashed_password = password_hash.hash(password).encode()
-    async with conn_utils.get_conn() as conn:
-        await queries.add_user(conn, username=username, password=hashed_password, super_admin=is_super_admin)
+    await queries.add_user(conn, username=username, password=hashed_password, super_admin=is_super_admin)
