@@ -36,7 +36,9 @@ async def get_active_jwt(access_token: Annotated[str, Cookie()]) -> dict:
 
 
 @app.post("/user/add")
-async def add_user(username: str, password: str):
+async def add_user(username: str, password: str, jwt: Annotated[dict, Depends(get_active_jwt)]):
+    if not jwt.get("super_admin"):
+        raise HTTPException(status_code=403, detail="You must be a super admin to add a new account")
     async with conn_utils.get_conn() as conn:
         await auth.add_user(conn, username, password)
     return {"success": True}
