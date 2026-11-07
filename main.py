@@ -22,6 +22,14 @@ app = FastAPI(lifespan=lifespan)
 templates = Jinja2Templates(directory="templates/")
 
 
+async def get_active_jwt(jwt_data: Annotated[dict, Depends(auth.get_current_jwt)]) -> dict:
+    async with conn_utils.get_conn() as conn:
+        valid = await queries.check_user_enabled(conn, id_=jwt_data["user_id"])
+    if not valid:
+        raise HTTPException(status_code=401, detail="JWT token belongs to an inactive account")
+    return jwt_data
+
+
 @app.post("/user/add")
 async def add_user(username: str, password: str):
     async with conn_utils.get_conn() as conn:
@@ -43,7 +51,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @app.get("/modify_directives")
-async def modify_directives_page(request: Request, jwt: Annotated[dict, Depends(auth.get_current_jwt)]):
+async def modify_directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)]):
     async with conn_utils.get_conn() as conn:
         directives = await queries.list_directives(conn)
 
@@ -55,7 +63,7 @@ async def modify_directives_page(request: Request, jwt: Annotated[dict, Depends(
 
 
 @app.post("/add_directive")
-async def add_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+async def add_directive(jwt: Annotated[dict, Depends(get_active_jwt)],
                         directive_type: Annotated[str, Form()],
                         selector_type: Annotated[str, Form()],
                         selector: Annotated[str, Form()],
@@ -75,7 +83,7 @@ async def add_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
 
 
 @app.post("/set_directive_status")
-async def set_directive_status(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+async def set_directive_status(jwt: Annotated[dict, Depends(get_active_jwt)],
                                directive_id: Annotated[int, Form()],
                                note: Annotated[str, Form()],
                                enabled: Annotated[bool, Form()] = False):
@@ -88,7 +96,7 @@ async def set_directive_status(jwt: Annotated[dict, Depends(auth.get_current_jwt
 
 
 @app.post("/add_audit_note")
-async def add_note_to_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+async def add_note_to_directive(jwt: Annotated[dict, Depends(get_active_jwt)],
                                 directive_id: Annotated[int, Form()],
                                 note: Annotated[str, Form()]):
     async with conn_utils.get_conn() as conn:
@@ -98,7 +106,7 @@ async def add_note_to_directive(jwt: Annotated[dict, Depends(auth.get_current_jw
 
 @app.get("/directives/{directive_id}")
 async def get_directive_page(request: Request,
-                             jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+                             jwt: Annotated[dict, Depends(get_active_jwt)],
                              directive_id: int):
     async with conn_utils.get_conn() as conn:
         directive = await queries.get_directive(conn, id_=directive_id)

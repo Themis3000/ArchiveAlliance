@@ -10,6 +10,7 @@ __all__: collections.abc.Sequence[str] = (
     "add_audit",
     "add_directive_with_audit",
     "add_user",
+    "check_user_enabled",
     "get_directive",
     "get_directive_audits",
     "get_user",
@@ -35,6 +36,10 @@ from . import models
 
 GET_USER: typing.Final[str] = """-- name: GetUser :one
 SELECT id, username, password, super_admin, enabled FROM users WHERE username = $1
+"""
+
+CHECK_USER_ENABLED: typing.Final[str] = """-- name: CheckUserEnabled :one
+SELECT EXISTS(SELECT FROM users WHERE id = $1 AND enabled = true)
 """
 
 LIST_USERS: typing.Final[str] = """-- name: ListUsers :many
@@ -127,6 +132,13 @@ async def get_user(conn: ConnectionLike, *, username: str) -> models.User | None
     if row is None:
         return None
     return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3], enabled=row[4])
+
+
+async def check_user_enabled(conn: ConnectionLike, *, id_: int) -> bool | None:
+    row = await conn.fetchrow(CHECK_USER_ENABLED, id_)
+    if row is None:
+        return None
+    return row[0]
 
 
 def list_users(conn: ConnectionLike) -> QueryResults[models.User]:

@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime, timezone
 from typing import Annotated
 import jwt
-from fastapi import Cookie
+from fastapi import Cookie, Depends
 from pwdlib import PasswordHash
 from pydantic import BaseModel
 from .sqlc import queries, models
