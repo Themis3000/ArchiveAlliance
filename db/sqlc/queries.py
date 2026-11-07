@@ -15,6 +15,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_directive_audits",
     "get_table_count",
     "get_user",
+    "get_work_directives",
     "list_directives",
     "list_users",
     "set_directive_status",
@@ -89,6 +90,13 @@ GET_TABLE_COUNT: typing.Final[str] = """-- name: GetTableCount :one
 select count(*)
 from information_schema.tables
 where table_schema = 'public'
+"""
+
+GET_WORK_DIRECTIVES: typing.Final[str] = """-- name: GetWorkDirectives :many
+SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active from directives
+WHERE
+    (selector_type = 'work_id' AND selector = $1::text AND active = true AND applies_to IN ($2::text, '*')) OR
+    (selector_type = 'author' AND selector = any($3::text[]) AND active = true AND applies_to IN ($2::text, '*'))
 """
 
 
@@ -197,3 +205,10 @@ async def get_table_count(conn: ConnectionLike) -> int | None:
     if row is None:
         return None
     return row[0]
+
+
+def get_work_directives(conn: ConnectionLike, *, work_id: str, origin: str, authors: collections.abc.Sequence[str]) -> QueryResults[models.Directive]:
+    def _decode_hook(row: asyncpg.Record) -> models.Directive:
+        return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+
+    return QueryResults(conn, GET_WORK_DIRECTIVES, _decode_hook, work_id, origin, authors)
