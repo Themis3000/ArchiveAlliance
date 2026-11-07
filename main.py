@@ -86,7 +86,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 @app.get("/directives")
 async def directives_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)], page: int = 1):
-    items_per_page = 10
+    items_per_page = 50
     offset = (page - 1) * items_per_page
     async with conn_utils.get_conn() as conn:
         directives = list(await queries.list_directives(conn, limit=items_per_page + 1, offset=offset))
