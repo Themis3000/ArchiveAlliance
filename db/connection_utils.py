@@ -1,6 +1,7 @@
 import asyncpg
 import os
 from .sqlc import queries
+from .auth import add_user
 
 
 class Connector:
@@ -32,6 +33,10 @@ class Connector:
         async with self.get_conn() as conn:
             with open("./db/sqlc/schema.sql", "r") as f:
                 await conn.execute(f.read())
+            await add_user(conn,
+                           username=os.environ["INIT_USERNAME"],
+                           password=os.environ["INIT_PASSWORD"],
+                           is_super_admin=True)
 
 
 class NoPoolOpen(Exception):
