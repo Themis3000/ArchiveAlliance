@@ -22,7 +22,7 @@
 </head>
 <body>
     <h1>Modify directives</h1>
-    <form action="/submit_directive" method="post">
+    <form action="/add_directive" method="post">
         <label>
             Directive type
             <select name="directive_type" id="directive_type">
@@ -32,23 +32,28 @@
             </select>
         </label>
         <br>
-        Remove by:
+        Selector type:
         <label>
-            <input type="radio" name="removal_type" value="author">
+            <input type="radio" name="selector_type" value="author">
             Author
         </label>
         <label>
-            <input type="radio" name="removal_type" value="work_id">
+            <input type="radio" name="selector_type" value="work_id">
             Work id
         </label>
         <br>
         <label>
-            Author / Work ID
-            <input type="text" name="author_or_id">
+            Selector
+            <input type="text" name="selector">
         </label>
         <label>
             Directive data
             <input type="text" name="directive_data">
+        </label>
+        <br>
+        <label>
+            Note:<br>
+            <textarea name="change_note" id="change_note" cols="50" rows="4"></textarea>
         </label>
         <br>
         <input type="submit" value="Submit">

@@ -10,6 +10,7 @@ __all__: collections.abc.Sequence[str] = (
     "User",
 )
 
+import datetime
 import pydantic
 import typing
 
@@ -21,16 +22,18 @@ class AuditLog(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     id_: int
-    user: int
+    user_id: int
     directive: int
     action: str
     note: str | None
+    time: datetime.date
 
 
 class Directive(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     id_: int
+    selector_type: str
     selector: str
     directive_type: str
     directive_data: str | None
@@ -45,3 +48,4 @@ class User(pydantic.BaseModel):
     username: str
     password: memoryview | None
     super_admin: bool
+    enabled: bool

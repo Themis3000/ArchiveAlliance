@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, Form
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from db import auth, connection_utils
@@ -42,7 +42,7 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
 
 
 @app.get("/modify_directives")
-async def modify_directives_page(request: Request, jwt: Annotated[str, Depends(auth.get_current_jwt)]):
+async def modify_directives_page(request: Request, jwt: Annotated[dict, Depends(auth.get_current_jwt)]):
     async with conn_utils.get_conn() as conn:
         directives = await queries.list_directives(conn)
 
@@ -51,6 +51,27 @@ async def modify_directives_page(request: Request, jwt: Annotated[str, Depends(a
         "modify_directives.jinja",
         context={"request": request, "directives": directives}
     )
+
+
+@app.post("/add_directive")
+async def add_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+                        directive_type: Annotated[str, Form()],
+                        selector_type: Annotated[str, Form()],
+                        selector: Annotated[str, Form()],
+                        change_note: Annotated[str, Form()],
+                        directive_data: Annotated[str | None, Form()] = None,
+                        ):
+    async with conn_utils.get_conn() as conn:
+        print(int(jwt["user_id"]))
+        await queries.add_directive(conn,
+                                    selector_type=selector_type,
+                                    selector=selector,
+                                    directive_type=directive_type,
+                                    directive_data=directive_data,
+                                    applies_to="*",
+                                    note=change_note,
+                                    user_id=int(jwt["user_id"]))
+    return RedirectResponse("/modify_directives", status_code=302)
 
 
 # This should stay after all other endpoints

@@ -1,5 +1,6 @@
 CREATE TABLE "directives"(
     "id" SERIAL NOT NULL,
+    "selector_type" VARCHAR(255) NOT NULL,
     "selector" TEXT NOT NULL,
     "directive_type" VARCHAR(255) NOT NULL,
     "directive_data" TEXT NULL,
@@ -18,7 +19,8 @@ CREATE TABLE "users"(
     "id" SERIAL NOT NULL,
     "username" VARCHAR(255) NOT NULL,
     "password" BYTEA,
-    "super_admin" BOOLEAN NOT NULL DEFAULT FALSE
+    "super_admin" BOOLEAN NOT NULL DEFAULT FALSE,
+    "enabled" BOOLEAN NOT NULL DEFAULT TRUE
 );
 ALTER TABLE
     "users" ADD PRIMARY KEY("id");
@@ -28,14 +30,15 @@ CREATE INDEX "users_username_index" ON
 
 CREATE TABLE "audit_log"(
     "id" SERIAL NOT NULL,
-    "user" INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
     "directive" INTEGER NOT NULL,
     "action" VARCHAR(255) NOT NULL,
-    "note" TEXT NULL
+    "note" TEXT NULL,
+    "time" DATE DEFAULT now() NOT NULL
 );
 ALTER TABLE
     "audit_log" ADD PRIMARY KEY("id");
 ALTER TABLE
-    "audit_log" ADD CONSTRAINT "audit_log_user_foreign" FOREIGN KEY("user") REFERENCES "users"("id");
+    "audit_log" ADD CONSTRAINT "audit_log_user_foreign" FOREIGN KEY(user_id) REFERENCES "users"("id");
 ALTER TABLE
     "audit_log" ADD CONSTRAINT "audit_log_directive_foreign" FOREIGN KEY("directive") REFERENCES "directives"("id");

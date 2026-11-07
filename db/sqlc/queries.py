@@ -7,6 +7,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "QueryResults",
+    "add_directive",
     "add_user",
     "get_user",
     "list_directives",
@@ -28,11 +29,11 @@ from . import models
 
 
 GET_USER: typing.Final[str] = """-- name: GetUser :one
-SELECT id, username, password, super_admin FROM users WHERE username = $1
+SELECT id, username, password, super_admin, enabled FROM users WHERE username = $1
 """
 
 LIST_USERS: typing.Final[str] = """-- name: ListUsers :many
-SELECT id, username, password, super_admin FROM users ORDER BY id
+SELECT id, username, password, super_admin, enabled FROM users ORDER BY id
 """
 
 ADD_USER: typing.Final[str] = """-- name: AddUser :exec
@@ -41,7 +42,17 @@ VALUES ($1, $2, $3)
 """
 
 LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
-SELECT id, selector, directive_type, directive_data, applies_to, active FROM directives ORDER BY id DESC
+SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives ORDER BY id DESC
+"""
+
+ADD_DIRECTIVE: typing.Final[str] = """-- name: AddDirective :exec
+WITH new_directive AS (
+    INSERT INTO directives (selector_type, selector, directive_type, directive_data, applies_to)
+    VALUES ($1, $2, $3, $4, $5)
+    RETURNING id
+)
+INSERT INTO audit_log (user_id, note, action, directive)
+VALUES ($6, $7, 'create', (select id from new_directive))
 """
 
 
@@ -91,12 +102,12 @@ async def get_user(conn: ConnectionLike, *, username: str) -> models.User | None
     row = await conn.fetchrow(GET_USER, username)
     if row is None:
         return None
-    return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3])
+    return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3], enabled=row[4])
 
 
 def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
     def _decode_hook(row: asyncpg.Record) -> models.User:
-        return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3])
+        return models.User(id_=row[0], username=row[1], password=memoryview(row[2]) if row[2] is not None else None, super_admin=row[3], enabled=row[4])
 
     return QueryResults(conn, LIST_USERS, _decode_hook)
 
@@ -107,6 +118,10 @@ async def add_user(conn: ConnectionLike, *, username: str, password: memoryview 
 
 def list_directives(conn: ConnectionLike) -> QueryResults[models.Directive]:
     def _decode_hook(row: asyncpg.Record) -> models.Directive:
-        return models.Directive(id_=row[0], selector=row[1], directive_type=row[2], directive_data=row[3], applies_to=row[4], active=row[5])
+        return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
 
     return QueryResults(conn, LIST_DIRECTIVES, _decode_hook)
+
+
+async def add_directive(conn: ConnectionLike, *, selector_type: str, selector: str, directive_type: str, directive_data: str | None, applies_to: str, user_id: int, note: str | None) -> None:
+    await conn.execute(ADD_DIRECTIVE, selector_type, selector, directive_type, directive_data, applies_to, user_id, note)
