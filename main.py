@@ -87,6 +87,15 @@ async def set_directive_status(jwt: Annotated[dict, Depends(auth.get_current_jwt
     return RedirectResponse(f"/directives/{directive_id}", status_code=302)
 
 
+@app.post("/add_audit_note")
+async def add_note_to_directive(jwt: Annotated[dict, Depends(auth.get_current_jwt)],
+                                directive_id: Annotated[int, Form()],
+                                note: Annotated[str, Form()]):
+    async with conn_utils.get_conn() as conn:
+        await queries.add_audit(conn, user_id=int(jwt["user_id"]), note=note, directive=directive_id, action="note")
+    return RedirectResponse(f"/directives/{directive_id}", status_code=302)
+
+
 @app.get("/directives/{directive_id}")
 async def get_directive_page(request: Request,
                              jwt: Annotated[dict, Depends(auth.get_current_jwt)],

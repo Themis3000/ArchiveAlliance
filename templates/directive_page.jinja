@@ -63,9 +63,10 @@
 
     <h3>Add note:</h3>
     <form action="/add_audit_note" method="post">
+        <input type="hidden" name="directive_id" value="{{ directive.id_ }}">
         <label>
             Note:<br>
-            <textarea name="change_note" id="change_note" cols="50" rows="4"></textarea>
+            <textarea name="note" id="change_note" cols="50" rows="4"></textarea>
         </label>
         <br>
         <input type="submit" value="Add note">
