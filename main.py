@@ -1,5 +1,5 @@
 from typing import Annotated
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from db import conn_utils, auth
@@ -43,8 +43,20 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
         raise HTTPException(status_code=401, detail="Invalid username/password")
     jwt_data = {"user_id": user.id_, "username": user.username, "super_admin": user.super_admin}
     token = auth.create_access_token(jwt_data)
-    return RedirectResponse("/user/myjwt", status_code=302,
+    return RedirectResponse("/modify_directives", status_code=302,
                             headers={"Set-Cookie": f"access_token={token.access_token}; Secure"})
+
+
+@app.get("/modify_directives")
+async def modify_directives_page(request: Request, jwt: Annotated[str, Depends(auth.get_current_jwt)]):
+    async with conn_utils.get_conn() as conn:
+        directives = await queries.list_directives(conn)
+
+    return templates.TemplateResponse(
+        request,
+        "modify_directives.jinja",
+        context={"request": request, "directives": directives}
+    )
 
 
 # This should stay after all other endpoints

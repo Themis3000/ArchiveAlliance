@@ -7,3 +7,6 @@ SELECT * FROM users ORDER BY id;
 -- name: AddUser :exec
 INSERT INTO users (username, password, super_admin)
 VALUES ($1, $2, $3);
+
+-- name: ListDirectives :many
+SELECT * FROM directives ORDER BY id DESC;

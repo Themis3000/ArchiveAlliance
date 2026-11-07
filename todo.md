@@ -1,0 +1,2 @@
+- Have jwt renew over time so that re-logging in isn't forced while actively using. Do this in a middleware probably
+- Handle an invalid/expired jwt gracefully, redirect to login page

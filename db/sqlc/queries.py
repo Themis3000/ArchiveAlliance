@@ -9,6 +9,7 @@ __all__: collections.abc.Sequence[str] = (
     "QueryResults",
     "add_user",
     "get_user",
+    "list_directives",
     "list_users",
 )
 
@@ -37,6 +38,10 @@ SELECT id, username, password, super_admin FROM users ORDER BY id
 ADD_USER: typing.Final[str] = """-- name: AddUser :exec
 INSERT INTO users (username, password, super_admin)
 VALUES ($1, $2, $3)
+"""
+
+LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
+SELECT id, selector, directive_type, directive_data, applies_to, active FROM directives ORDER BY id DESC
 """
 
 
@@ -98,3 +103,10 @@ def list_users(conn: ConnectionLike) -> QueryResults[models.User]:
 
 async def add_user(conn: ConnectionLike, *, username: str, password: memoryview | None, super_admin: bool) -> None:
     await conn.execute(ADD_USER, username, password, super_admin)
+
+
+def list_directives(conn: ConnectionLike) -> QueryResults[models.Directive]:
+    def _decode_hook(row: asyncpg.Record) -> models.Directive:
+        return models.Directive(id_=row[0], selector=row[1], directive_type=row[2], directive_data=row[3], applies_to=row[4], active=row[5])
+
+    return QueryResults(conn, LIST_DIRECTIVES, _decode_hook)
