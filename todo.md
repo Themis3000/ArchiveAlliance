@@ -1,5 +1,4 @@
 - Make directives.selector case-insensitive
-- Fix indexing for selector type / selector pair
 - Display time in requester's time zone
 - Add explanation of the service on home page
 - Add explanation in readme
