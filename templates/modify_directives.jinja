@@ -66,6 +66,7 @@
             <th>Selector</th>
             <th>Directive type</th>
             <th>Directive data</th>
+            <th>Enabled</th>
         </tr>
         {% for directive in directives %}
             <tr>
@@ -75,9 +76,9 @@
                 <td>{{ directive.directive_type }}</td>
                 <td>{{ directive.directive_data }}</td>
                 <td>
-                    <form action="/remove_directive" method="post">
-                        <button name="directive_id" value="{{ directive.id_ }}">Delete</button>
-                    </form>
+                    <label>
+                        <input type="checkbox" disabled {{ "checked" if directive.active }}>
+                    </label>
                 </td>
             </tr>
         {% endfor %}
