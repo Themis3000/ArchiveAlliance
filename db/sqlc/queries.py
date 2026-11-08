@@ -7,6 +7,7 @@ from __future__ import annotations
 
 __all__: collections.abc.Sequence[str] = (
     "GetDirectiveAuditsRow",
+    "ListAuditEntriesRow",
     "QueryResults",
     "add_audit",
     "add_directive_with_audit",
@@ -17,6 +18,7 @@ __all__: collections.abc.Sequence[str] = (
     "get_table_count",
     "get_user",
     "get_work_directives",
+    "list_audit_entries",
     "list_directives",
     "list_users",
     "search_directives",
@@ -38,6 +40,18 @@ if typing.TYPE_CHECKING:
     type ConnectionLike = asyncpg.Connection[asyncpg.Record] | asyncpg.pool.PoolConnectionProxy[asyncpg.Record]
 
 from . import models
+
+
+class ListAuditEntriesRow(pydantic.BaseModel):
+    model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
+
+    id_: int
+    action: str
+    note: str | None
+    user_id: int
+    time: datetime.datetime
+    directive: int
+    username: str | None
 
 
 class GetDirectiveAuditsRow(pydantic.BaseModel):
@@ -77,6 +91,14 @@ WHERE id = $1
 LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
 SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
 ORDER BY id DESC
+OFFSET $1
+LIMIT $2
+"""
+
+LIST_AUDIT_ENTRIES: typing.Final[str] = """-- name: ListAuditEntries :many
+SELECT a.id, a.action, a.note, a.user_id, a.time, a.directive, u.username FROM audit_log a
+LEFT JOIN users u on u.id = a.user_id
+ORDER BY a.id desc
 OFFSET $1
 LIMIT $2
 """
@@ -208,6 +230,13 @@ def list_directives(conn: ConnectionLike, *, offset: int, limit: int) -> QueryRe
         return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
 
     return QueryResults(conn, LIST_DIRECTIVES, _decode_hook, offset, limit)
+
+
+def list_audit_entries(conn: ConnectionLike, *, offset: int, limit: int) -> QueryResults[ListAuditEntriesRow]:
+    def _decode_hook(row: asyncpg.Record) -> ListAuditEntriesRow:
+        return ListAuditEntriesRow(id_=row[0], action=row[1], note=row[2], user_id=row[3], time=row[4], directive=row[5], username=row[6])
+
+    return QueryResults(conn, LIST_AUDIT_ENTRIES, _decode_hook, offset, limit)
 
 
 def search_directives(conn: ConnectionLike, *, selector: str) -> QueryResults[models.Directive]:

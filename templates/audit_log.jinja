@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audit log</title>
+    <style>
+        table {
+          font-family: arial, sans-serif;
+          border-collapse: collapse;
+        }
+
+        td, th {
+          border: 1px solid #dddddd;
+          text-align: left;
+          padding: 8px;
+        }
+
+        tr:nth-child(even) {
+          background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audit log</h1>
+    <table>
+        <tr>
+            <th>Entry id</th>
+            <th>Directive id</th>
+            <th>User</th>
+            <th>Action</th>
+            <th>Note</th>
+            <th>Time</th>
+        </tr>
+        {% for entry in audit_log %}
+            <tr>
+                <td>{{ entry.id_ }}</td>
+                <td><a href="/directives/{{ entry.directive }}">{{ entry.directive }}</a></td>
+                <td>{{ entry.username }}</td>
+                <td>{{ entry.action }}</td>
+                <td>{{ entry.note }}</td>
+                <td>{{ entry.time }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

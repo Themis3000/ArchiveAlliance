@@ -22,6 +22,13 @@ ORDER BY id DESC
 OFFSET $1
 LIMIT $2;
 
+-- name: ListAuditEntries :many
+SELECT a.id, a.action, a.note, a.user_id, a.time, a.directive, u.username FROM audit_log a
+LEFT JOIN users u on u.id = a.user_id
+ORDER BY a.id desc
+OFFSET $1
+LIMIT $2;
+
 -- name: SearchDirectives :many
 SELECT * FROM directives
 WHERE selector = $1
@@ -48,7 +55,8 @@ VALUES ($1, $2, $3, $4);
 -- name: GetDirectiveAudits :many
 SELECT a.id, a.action, a.note, a.user_id, a.time, u.username FROM audit_log a
 LEFT JOIN users u on u.id = a.user_id
-WHERE a.directive = $1;
+WHERE a.directive = $1
+ORDER BY a.id desc;
 
 -- name: GetDirective :one
 SELECT * from directives WHERE id = $1;
