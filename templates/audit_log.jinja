@@ -42,6 +42,14 @@
             </tr>
         {% endfor %}
     </table>
+    {% if not is_search %}
+        {% if page != 1 %}
+            <a href="?page={{ page - 1 }}">Last page</a>
+        {% endif %}
+        {% if next_page %}
+            <a href="?page={{ page + 1 }}">Next page</a>
+        {% endif %}
+    {% endif %}
 
 </body>
 </html>

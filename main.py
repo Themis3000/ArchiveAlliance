@@ -199,7 +199,7 @@ async def get_directive_page(request: Request,
 
 @app.get("/audit_log")
 async def audit_log_page(request: Request, jwt: Annotated[dict, Depends(get_active_jwt)], page: int = 1):
-    items_per_page = 50
+    items_per_page = 10
     offset = (page - 1) * items_per_page
     async with conn_utils.get_conn() as conn:
         audit_log = list(await queries.list_audit_entries(conn, limit=items_per_page + 1, offset=offset))
