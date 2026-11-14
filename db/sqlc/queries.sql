@@ -36,8 +36,8 @@ ORDER BY id DESC;
 
 -- name: AddDirectiveWithAudit :exec
 WITH new_directive AS (
-    INSERT INTO directives (selector_type, selector, directive_type, directive_data, applies_to)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO directives (website, selector_type, selector, directive_type, directive_data, applies_to)
+    VALUES ($1, $2, $3, $4, $5, sqlc.arg(applies_to))
     RETURNING id
 )
 INSERT INTO audit_log (user_id, note, action, directive)

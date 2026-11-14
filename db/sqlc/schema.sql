@@ -1,5 +1,6 @@
 CREATE TABLE "directives"(
     "id" SERIAL NOT NULL,
+    "website" VARCHAR(255) NOT NULL,
     "selector_type" VARCHAR(255) NOT NULL,
     "selector" TEXT NOT NULL,
     "directive_type" VARCHAR(255) NOT NULL,

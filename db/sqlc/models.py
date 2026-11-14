@@ -33,6 +33,7 @@ class Directive(pydantic.BaseModel):
     model_config = pydantic.ConfigDict(arbitrary_types_allowed=True)
 
     id_: int
+    website: str
     selector_type: str
     selector: str
     directive_type: str

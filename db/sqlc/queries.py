@@ -89,7 +89,7 @@ WHERE id = $1
 """
 
 LIST_DIRECTIVES: typing.Final[str] = """-- name: ListDirectives :many
-SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
+SELECT id, website, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
 ORDER BY id DESC
 OFFSET $1
 LIMIT $2
@@ -104,15 +104,15 @@ LIMIT $2
 """
 
 SEARCH_DIRECTIVES: typing.Final[str] = """-- name: SearchDirectives :many
-SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
+SELECT id, website, selector_type, selector, directive_type, directive_data, applies_to, active FROM directives
 WHERE selector = $1
 ORDER BY id DESC
 """
 
 ADD_DIRECTIVE_WITH_AUDIT: typing.Final[str] = """-- name: AddDirectiveWithAudit :exec
 WITH new_directive AS (
-    INSERT INTO directives (selector_type, selector, directive_type, directive_data, applies_to)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO directives (website, selector_type, selector, directive_type, directive_data, applies_to)
+    VALUES ($1, $2, $3, $4, $5, $8)
     RETURNING id
 )
 INSERT INTO audit_log (user_id, note, action, directive)
@@ -134,10 +134,11 @@ GET_DIRECTIVE_AUDITS: typing.Final[str] = """-- name: GetDirectiveAudits :many
 SELECT a.id, a.action, a.note, a.user_id, a.time, u.username FROM audit_log a
 LEFT JOIN users u on u.id = a.user_id
 WHERE a.directive = $1
+ORDER BY a.id desc
 """
 
 GET_DIRECTIVE: typing.Final[str] = """-- name: GetDirective :one
-SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active from directives WHERE id = $1
+SELECT id, website, selector_type, selector, directive_type, directive_data, applies_to, active from directives WHERE id = $1
 """
 
 GET_TABLE_COUNT: typing.Final[str] = """-- name: GetTableCount :one
@@ -147,7 +148,7 @@ where table_schema = 'public'
 """
 
 GET_WORK_DIRECTIVES: typing.Final[str] = """-- name: GetWorkDirectives :many
-SELECT id, selector_type, selector, directive_type, directive_data, applies_to, active from directives
+SELECT id, website, selector_type, selector, directive_type, directive_data, applies_to, active from directives
 WHERE
     (selector_type = 'work_id' AND selector = $1::text AND active = true AND applies_to IN ($2::text, '*')) OR
     (selector_type = 'author' AND selector = any($3::text[]) AND active = true AND applies_to IN ($2::text, '*'))
@@ -227,7 +228,7 @@ async def update_user(conn: ConnectionLike, *, id_: int, enabled: bool, super_ad
 
 def list_directives(conn: ConnectionLike, *, offset: int, limit: int) -> QueryResults[models.Directive]:
     def _decode_hook(row: asyncpg.Record) -> models.Directive:
-        return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+        return models.Directive(id_=row[0], website=row[1], selector_type=row[2], selector=row[3], directive_type=row[4], directive_data=row[5], applies_to=row[6], active=row[7])
 
     return QueryResults(conn, LIST_DIRECTIVES, _decode_hook, offset, limit)
 
@@ -241,13 +242,13 @@ def list_audit_entries(conn: ConnectionLike, *, offset: int, limit: int) -> Quer
 
 def search_directives(conn: ConnectionLike, *, selector: str) -> QueryResults[models.Directive]:
     def _decode_hook(row: asyncpg.Record) -> models.Directive:
-        return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+        return models.Directive(id_=row[0], website=row[1], selector_type=row[2], selector=row[3], directive_type=row[4], directive_data=row[5], applies_to=row[6], active=row[7])
 
     return QueryResults(conn, SEARCH_DIRECTIVES, _decode_hook, selector)
 
 
-async def add_directive_with_audit(conn: ConnectionLike, *, selector_type: str, selector: str, directive_type: str, directive_data: str | None, applies_to: str, user_id: int, note: str | None) -> None:
-    await conn.execute(ADD_DIRECTIVE_WITH_AUDIT, selector_type, selector, directive_type, directive_data, applies_to, user_id, note)
+async def add_directive_with_audit(conn: ConnectionLike, *, website: str, selector_type: str, selector: str, directive_type: str, directive_data: str | None, user_id: int, note: str | None, applies_to: str) -> None:
+    await conn.execute(ADD_DIRECTIVE_WITH_AUDIT, website, selector_type, selector, directive_type, directive_data, user_id, note, applies_to)
 
 
 async def set_directive_status(conn: ConnectionLike, *, id_: int, active: bool) -> None:
@@ -269,7 +270,7 @@ async def get_directive(conn: ConnectionLike, *, id_: int) -> models.Directive |
     row = await conn.fetchrow(GET_DIRECTIVE, id_)
     if row is None:
         return None
-    return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+    return models.Directive(id_=row[0], website=row[1], selector_type=row[2], selector=row[3], directive_type=row[4], directive_data=row[5], applies_to=row[6], active=row[7])
 
 
 async def get_table_count(conn: ConnectionLike) -> int | None:
@@ -281,6 +282,6 @@ async def get_table_count(conn: ConnectionLike) -> int | None:
 
 def get_work_directives(conn: ConnectionLike, *, work_id: str, origin: str, authors: collections.abc.Sequence[str]) -> QueryResults[models.Directive]:
     def _decode_hook(row: asyncpg.Record) -> models.Directive:
-        return models.Directive(id_=row[0], selector_type=row[1], selector=row[2], directive_type=row[3], directive_data=row[4], applies_to=row[5], active=row[6])
+        return models.Directive(id_=row[0], website=row[1], selector_type=row[2], selector=row[3], directive_type=row[4], directive_data=row[5], applies_to=row[6], active=row[7])
 
     return QueryResults(conn, GET_WORK_DIRECTIVES, _decode_hook, work_id, origin, authors)

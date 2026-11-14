@@ -145,10 +145,12 @@ async def add_directive(jwt: Annotated[dict, Depends(get_active_jwt)],
                         selector_type: Annotated[str, Form()],
                         selector: Annotated[str, Form()],
                         change_note: Annotated[str, Form()],
+                        website: Annotated[str, Form()],
                         directive_data: Annotated[str | None, Form()] = None,
                         origin: Annotated[str, Form()] = "*"):
     async with conn_utils.get_conn() as conn:
         await queries.add_directive_with_audit(conn,
+                                               website=website,
                                                selector_type=selector_type,
                                                selector=selector,
                                                directive_type=directive_type,
