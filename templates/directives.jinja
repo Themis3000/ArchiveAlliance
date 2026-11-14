@@ -95,6 +95,7 @@
     <table>
         <tr>
             <th>Directive ID</th>
+            <th>Website</th>
             <th>Selector type</th>
             <th>Selector</th>
             <th>Directive type</th>
@@ -105,6 +106,7 @@
         {% for directive in directives %}
             <tr>
                 <td><a href="/directives/{{ directive.id_ }}">{{ directive.id_ }}</a></td>
+                <td>{{ directive.website }}</td>
                 <td>{{ directive.selector_type }}</td>
                 <td>{{ directive.selector }}</td>
                 <td>{{ directive.directive_type }}</td>
