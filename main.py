@@ -9,6 +9,7 @@ from db.sqlc import queries
 from contextlib import asynccontextmanager
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+import re
 
 conn_utils = connection_utils.Connector()
 
@@ -215,9 +216,18 @@ async def audit_log_page(request: Request, jwt: Annotated[dict, Depends(get_acti
         context={"audit_log": audit_log, "page": page, "next_page": next_page}
     )
 
+# Matches display names using a pseud on ao3, for example "hotdog (Themis3000)" would match, and "Themis3000" would be
+# part of group 1
+author_name_re = re.compile(r".+\((.+)\)")
+
 
 @app.get("/api/check_ao3_work_status")
 async def check_work_status(work_id: int, authors: Annotated[list[str], Query()], site: str):
+    for author in authors:
+        if pseud_match := author_name_re.search(author):
+            extracted_author = pseud_match.group(1)
+            authors.append(extracted_author)
+
     async with conn_utils.get_conn() as conn:
         directives = await queries.get_work_directives(conn, work_id=str(work_id), authors=authors, origin=site,
                                                        website="archiveofourown.org")
