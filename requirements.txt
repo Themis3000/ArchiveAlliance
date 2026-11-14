@@ -1,6 +1,6 @@
 Jinja2
 uvicorn
-fastapi
+fastapi[standard]
 sqlc-bin
 asyncpg
 asyncpg-stubs

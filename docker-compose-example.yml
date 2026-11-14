@@ -1,0 +1,34 @@
+services:
+  archive_alliance:
+    build: ./
+    restart: unless-stopped
+    environment:
+      DB: postgres
+      HOST: postgres
+      USER: postgres
+      PASSWORD: postgres
+      PORT: 5432
+      INIT_PASSWORD: test
+      INIT_USERNAME: Themis3000
+      SECRET_KEY: eaedf1eca19cd97855d50698724bc88304af49acf1e65ff7d17b982ae34758fe
+      TOKEN_EXPIRE_MINS: 60
+    ports:
+      - "80:80"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    shm_size: 256mb
+    environment:
+      POSTGRES_PASSWORD: postgres
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - "./data:/var/lib/postgresql/data"
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
