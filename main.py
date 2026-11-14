@@ -216,21 +216,22 @@ async def audit_log_page(request: Request, jwt: Annotated[dict, Depends(get_acti
     )
 
 
-@app.get("/api/check_work_status")
+@app.get("/api/check_ao3_work_status")
 async def check_work_status(work_id: int, authors: Annotated[list[str], Query()], site: str):
     async with conn_utils.get_conn() as conn:
-        directives = await queries.get_work_directives(conn, work_id=str(work_id), authors=authors, origin=site)
+        directives = await queries.get_work_directives(conn, work_id=str(work_id), authors=authors, origin=site,
+                                                       website="archiveofourown.org")
 
-    permission = True
+    authorized = True
     for directive in directives:
         if directive.directive_type in ["removed_notice", "removed_notice_note", "do_not_serve"]:
-            permission = False
+            authorized = False
             continue
         if directive.directive_type == "no_restrictions":
-            permission = True
+            authorized = True
             break
 
-    return {"permission": permission, "directives": directives}
+    return {"authorized": authorized, "directives": directives}
 
 
 # This should stay after all other endpoints

@@ -150,8 +150,10 @@ where table_schema = 'public'
 GET_WORK_DIRECTIVES: typing.Final[str] = """-- name: GetWorkDirectives :many
 SELECT id, website, selector_type, selector, directive_type, directive_data, applies_to, active from directives
 WHERE
-    (selector_type = 'work_id' AND selector = $1::text AND active = true AND applies_to IN ($2::text, '*')) OR
-    (selector_type = 'author' AND selector = any($3::text[]) AND active = true AND applies_to IN ($2::text, '*'))
+    (
+        (selector_type = 'work_id' AND selector = $2::text) OR
+        (selector_type = 'author' AND selector = any ($3::text[]))
+    ) AND active = true AND applies_to IN ($4::text, '*') AND website = $1
 """
 
 
@@ -280,8 +282,8 @@ async def get_table_count(conn: ConnectionLike) -> int | None:
     return row[0]
 
 
-def get_work_directives(conn: ConnectionLike, *, work_id: str, origin: str, authors: collections.abc.Sequence[str]) -> QueryResults[models.Directive]:
+def get_work_directives(conn: ConnectionLike, *, website: str, work_id: str, authors: collections.abc.Sequence[str], origin: str) -> QueryResults[models.Directive]:
     def _decode_hook(row: asyncpg.Record) -> models.Directive:
         return models.Directive(id_=row[0], website=row[1], selector_type=row[2], selector=row[3], directive_type=row[4], directive_data=row[5], applies_to=row[6], active=row[7])
 
-    return QueryResults(conn, GET_WORK_DIRECTIVES, _decode_hook, work_id, origin, authors)
+    return QueryResults(conn, GET_WORK_DIRECTIVES, _decode_hook, website, work_id, authors, origin)
