@@ -73,3 +73,8 @@ WHERE
         (selector_type = 'work_id' AND selector = sqlc.arg(work_id)::text) OR
         (selector_type = 'author' AND selector = any (sqlc.arg(authors)::text[]))
     ) AND active = true AND applies_to IN (sqlc.arg(origin)::text, '*') AND website = $1;
+
+-- name: UpdatePassword :exec
+UPDATE users
+SET password = $2
+WHERE id = $1;

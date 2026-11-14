@@ -1,7 +1,7 @@
 import datetime
 from typing import Annotated
 from fastapi import FastAPI, Depends, HTTPException, Request, Form, Cookie, Query
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from jwt import InvalidTokenError
 from db import auth, connection_utils
@@ -110,6 +110,21 @@ async def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
     token = auth.create_access_token(jwt_data)
     return RedirectResponse("/directives", status_code=302,
                             headers={"Set-Cookie": f"access_token={token.access_token}; Secure"})
+
+
+@app.get("/change_password")
+async def change_password_page(jwt: Annotated[dict, Depends(get_active_jwt)]):
+    return FileResponse("./templates/change_password.html")
+
+
+@app.post("/change_password")
+async def change_password(jwt: Annotated[dict, Depends(get_active_jwt)], new_password: Annotated[str, Form()],
+                          new_password_repeat: Annotated[str, Form()]):
+    if new_password != new_password_repeat:
+        raise HTTPException(status_code=400, detail="The two entered passwords do not match!")
+    async with conn_utils.get_conn() as conn:
+        await auth.update_user_password(conn, user_id=jwt["user_id"], password=new_password)
+    return RedirectResponse("/directives", status_code=302)
 
 
 @app.get("/directives")

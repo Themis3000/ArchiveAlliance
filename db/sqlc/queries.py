@@ -23,6 +23,7 @@ __all__: collections.abc.Sequence[str] = (
     "list_users",
     "search_directives",
     "set_directive_status",
+    "update_password",
     "update_user",
 )
 
@@ -156,6 +157,12 @@ WHERE
     ) AND active = true AND applies_to IN ($4::text, '*') AND website = $1
 """
 
+UPDATE_PASSWORD: typing.Final[str] = """-- name: UpdatePassword :exec
+UPDATE users
+SET password = $2
+WHERE id = $1
+"""
+
 
 class QueryResults[T]:
     __slots__ = ("_args", "_conn", "_cursor", "_decode_hook", "_iterator", "_sql")
@@ -287,3 +294,7 @@ def get_work_directives(conn: ConnectionLike, *, website: str, work_id: str, aut
         return models.Directive(id_=row[0], website=row[1], selector_type=row[2], selector=row[3], directive_type=row[4], directive_data=row[5], applies_to=row[6], active=row[7])
 
     return QueryResults(conn, GET_WORK_DIRECTIVES, _decode_hook, website, work_id, authors, origin)
+
+
+async def update_password(conn: ConnectionLike, *, id_: int, password: memoryview | None) -> None:
+    await conn.execute(UPDATE_PASSWORD, id_, password)

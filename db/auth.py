@@ -59,3 +59,8 @@ class InvalidJWTData(Exception):
 async def add_user(conn, username: str, password: str, is_super_admin=False):
     hashed_password = password_hash.hash(password).encode()
     await queries.add_user(conn, username=username, password=hashed_password, super_admin=is_super_admin)
+
+
+async def update_user_password(conn, user_id: int, password: str):
+    hashed_password = password_hash.hash(password).encode()
+    await queries.update_password(conn, id_=user_id, password=hashed_password)
