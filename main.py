@@ -59,6 +59,8 @@ async def refresh_jwt(request: Request, call_next):
 async def forbidden_redirect(request: Request, call_next):
     response = await call_next(request)
     if response.status_code == 401:
+        if request.url.path == "/login":
+            return response
         return RedirectResponse("/login.html", status_code=302)
     return response
 
