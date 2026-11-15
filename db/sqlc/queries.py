@@ -153,7 +153,7 @@ SELECT id, website, selector_type, selector, directive_type, directive_data, app
 WHERE
     (
         (selector_type = 'work_id' AND selector = $2::text) OR
-        (selector_type = 'author' AND selector = any ($3::text[]))
+        (selector_type = 'author' AND selector = any ($3::citext[]))
     ) AND active = true AND applies_to IN ($4::text, '*') AND website = $1
 """
 

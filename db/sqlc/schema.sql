@@ -1,8 +1,10 @@
+CREATE EXTENSION IF NOT EXISTS citext;
+
 CREATE TABLE "directives"(
     "id" SERIAL NOT NULL,
     "website" VARCHAR(255) NOT NULL,
     "selector_type" VARCHAR(255) NOT NULL,
-    "selector" TEXT NOT NULL,
+    "selector" CITEXT NOT NULL,
     "directive_type" VARCHAR(255) NOT NULL,
     "directive_data" TEXT NULL,
     "applies_to" TEXT NOT NULL DEFAULT '*',
